@@ -1,37 +1,82 @@
-alert("boas vindas ao jogo do número secreto!");
-let nroLimite = 0;
-let nroSecreto;
-let acertou = false;
-let nroDigitado;
+let listaNrosSorteados = [];
+let nroLimite = 10;
+let nroSecreto = gerarNroAleatorio();
 let tentativas = 0;
+let nroDigitado;
 
-nroLimite = Number(prompt("Informe um número para limitar a variação."));
-nroSecreto = Math.floor(Math.random() * nroLimite) + 1;
+//let titulo = document.querySelector('h1');
+//titulo.innerHTML = 'Jogo do Número Secreto';
 
-while (acertou == false){
-    tentativas++;
-    nroDigitado = Number(prompt("Agora, tente acertar!\nEscolha um nro entre 1 e " + nroLimite));
+//let paragrafo = document.querySelector('p');
+//paragrafo.innerHTML = 'Escolha um número entre 1 e ' + nroLimite;
 
-    if (isNaN(nroDigitado)) {
-        alert("Entrada inválida. Digite um nro.");
+exibirTexto('h1', 'Jogo do Número Secreto');
+exibirTexto('p', 'Escolha um número entre 1 e ' + nroLimite);
+
+function exibirTexto(tag, texto){
+    let campo = document.querySelector(tag);
+    campo.innerHTML = texto;
+    //responsiveVoice.speak(texto, 'Brazilian Portuguese Female', {rate:1.2});
+    //quando responsiveVoice não carrega por alguma limitação ou erro, pode usar a nativa.
+    if ('speechSynthesis' in window) {
+        let utterance = new SpeechSynthesisUtterance(texto);
+        utterance.lang = 'pt-BR'; 
+        utterance.rate = 2;
+        window.speechSynthesis.speak(utterance); 
     } else {
-        switch (true) {
-            case (nroDigitado == nroSecreto):
-                acertou = true;
-                break;
-            case (nroDigitado > nroSecreto):
-                alert("Nro Secreto é menor que o digitado");
-                break;
-            case (nroDigitado < nroSecreto):
-                alert("Nro Secreto é maior que o digitado");
-                break;
-            default:
-                alert("Não deu.");
-        }
-    }        
+        console.log("Web Speech API não suportada neste navegador.");
+    }
 }
 
-let palavraTentativa = tentativas > 1 ? 'tentativas' : 'tentativa';
+function gerarNroAleatorio(){
+    //    return Math.floor(Math.random() * nroLimite) + 1;
+    let nroEscolhido = Math.floor(Math.random() * nroLimite) + 1;
 
-alert(`Feito! Descobriu o nro secreto ${nroSecreto}! Precisou de ${tentativas} ${palavraTentativa}.`);
+    if (nroLimite == listaNrosSorteados.length){
+        listaNrosSorteados = [];
+    }
 
+    if (listaNrosSorteados.includes(nroEscolhido)){
+
+        return gerarNroAleatorio();
+    } else {
+        listaNrosSorteados.push(nroEscolhido);
+        return nroEscolhido;
+    }
+
+}
+
+function limparCampo(){
+    nroDigitado = document.querySelector('input');
+    nroDigitado.value = '';
+}
+
+function verificarChute() {
+    //pega nro digitado e testa com o aleatorio.
+    nroDigitado = document.querySelector('input').value;
+    let dica;
+    let palavraTentativa;
+    tentativas++;
+    
+    if (nroDigitado == nroSecreto){
+        palavraTentativa = tentativas > 1 ? ' tentativas.' : ' tentativa.';
+        dica = 'PARABÉNS! Você acertou com ' + tentativas + palavraTentativa;
+        document.getElementById('reiniciar').removeAttribute('disabled');
+    } else {
+        if (nroDigitado > nroSecreto){
+            dica = "Nro Secreto é menor que o digitado.";
+        } else {
+            dica = "Nro Secreto é maior que o digitado.";
+        }
+        limparCampo();
+    }
+    exibirTexto('p', dica);
+}
+
+function reiniciarJogo(){
+    nroSecreto = gerarNroAleatorio();
+    limparCampo();
+    tentativas = 0;
+    exibirTexto('p', 'Escolha um número entre 1 e ' + nroLimite);
+    document.getElementById('reiniciar').setAttribute('disabled', 'true');
+}
